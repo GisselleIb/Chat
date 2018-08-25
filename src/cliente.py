@@ -17,4 +17,3 @@ class Cliente():
 
     def respuesta(self):
         pass
-        

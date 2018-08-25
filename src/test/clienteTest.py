@@ -1,7 +1,21 @@
 import unittest
+import sys
+sys.path.append('../..')
+from src.cliente import Cliente
 class ClienteTest(unittest.TestCase):
 
-    test_seConecto():
+    def test_cliente(self):
+        pass
 
-    test_desconectado():
-    
+    def test_se_conecto(self):
+        pass
+    def test_desconectado(self):
+        pass
+
+    def test_enviado(self):
+        pass
+
+    def test_respuesta(self):
+        pass
+if __name__ == '__main__':
+    unittest.main()
