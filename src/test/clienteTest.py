@@ -8,7 +8,8 @@ class ClienteTest(unittest.TestCase):
         pass
 
     def test_se_conecto(self):
-        pass
+
+        return False
     def test_desconectado(self):
         pass
 
