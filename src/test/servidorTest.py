@@ -7,28 +7,10 @@ class ServidorTest(unittest.TestCase):
 
     def test_conectaCliente(self):
         serv=Servidor('',68)
-        with self.assertRaises(socket.error):
-            serv.conectaCliente()
+        self.assertFalse(serv.conectaCliente())
         serv.setHost('')
         serv.setPort(80)
-        assertTrue(serv.conectaCliente())
-
-    def test_muerto(self):
-        serv=Servidor('',80)
-        self.assertTrue(serv.muerto())
-
-    def test_escucha(self):
-        serv=Servidor('',80)
-        self.assertEqual(serv.escucha(),"Servidor escuchando")
-
-    def test_acepta(self):
-        pass
-
-    def test_enviaRespuesta(self):
-        pass
-
-    def test_lee(self):
-        pass
+        self.assertTrue(serv.conectaCliente())
 
     def test_getHost(self):
         serv=Servidor('',80)
