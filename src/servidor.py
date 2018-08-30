@@ -2,7 +2,7 @@ import socket
 import sys
 from _thread import *
 class Servidor():
-
+    clientes=[]
     def __init__(self,host,port):
         self.host=host
         self.port=port
@@ -29,21 +29,36 @@ class Servidor():
 
     def servidorVivo(self):
         self.sock.listen(100)
-        while 1:
+        while True:
             con,dir=self.sock.accept()
+            self.clientes.append(con)
             print("Conectado a"+dir[0]+":"+str(dir[1]))
             start_new_thread(self.threadCliente,(con,))
-            
+
 
     def threadCliente(self,con):
         while True:
-            mensaje=con.recv(4096)
-            respuesta= ':'+ mensaje.decode()
-            if not mensaje:
-                break
-            con.sendall(mensaje)
-            print(respuesta)
+            try:
+                mensaje=con.recv(4096)
+                if(mensaje.decode() == "Salir"):
+                    self.sock.send("Desconectando del Servidor")
+                    break
+                if(mensaje):
+                    respuesta= ':'+ mensaje.decode()
+                    print(respuesta)
+                    #considerar meter aqui la clase usuario y tomar su nombre...
+                    self.transmite(respuesta.encode(),con)
+            except:
+                continue
         con.close()
+
+    def transmite(self,respuesta,conexion):
+            for cliente in self.clientes:
+                if(cliente != conexion):
+                    try:
+                        cliente.sendall(respuesta)
+                    except e:
+                        cliente.close()
 
     def muerto(self):
         self.sock.close()

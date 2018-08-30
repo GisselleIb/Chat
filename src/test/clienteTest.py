@@ -3,17 +3,21 @@ import sys
 sys.path.append('../..')
 from src.cliente import Cliente
 class ClienteTest(unittest.TestCase):
-    client=Cliente(socket.gethostname(),80)
+
     def test_cliente(self):
         pass
 
     def test_seConecto(self):
+        client=Cliente(socket.gethostname(),65)
+        self.assertFalse(client.seConecto())
+        client.setPort(80)
         self.assertTrue(client.seConecto())
     def test_desconectado(self):
-        self.assertTrue(client.desconectado)
+        self.assertEqual("Desconectando del servidor",client.desconectado())
 
     def test_enviado(self):
-        pass
+        client=Cliente(socket.gethostname(),80)
+        assertFalse(client.seConecto())
 
     def test_respuesta(self):
         pass

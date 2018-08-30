@@ -11,16 +11,16 @@ class Cliente():
             print("Error al crear socket")
             sys.exit()
 
-        def setHost(self,host):
+    def setHost(self,host):
             self.host=host
 
-        def setPort(self,port):
+    def setPort(self,port):
             self.port=port
 
-        def getHost(self):
+    def getHost(self):
             return self.host
 
-        def getPort(self):
+    def getPort(self):
             return self.port
 
     def seConecto(self):
@@ -31,20 +31,18 @@ class Cliente():
         except socket.timeout:
             return False
     def desconectado(self):
-        pass
-
+        s="Salir"
+        sock.send(s.encode())
+        s=recv(4096).decode()
+        print(s)
+        return s
     def enviado(self):
         print("Bienvenido, escribe tu mensaje!:"+"\n")
         while True:
             mensaje=input()
             try:
                 self.sock.sendall(mensaje.encode())
-                print(mensaje)
-                return True
+                respuesta=self.sock.recv(4096).decode()
             except socket.error:
                 print("Falla al enviar el mensaje")
                 sys.exit()
-                return False
-    def respuesta(self):
-        respuesta=self.sock.recv(4096)
-        print(respuesta)
