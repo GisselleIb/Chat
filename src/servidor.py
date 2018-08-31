@@ -41,7 +41,7 @@ class Servidor():
             try:
                 mensaje=con.recv(4096)
                 if(mensaje.decode() == "Salir"):
-                    self.sock.send("Desconectando del Servidor")
+                    self.con.send("Desconectando del Servidor")
                     break
                 if(mensaje):
                     respuesta= ':'+ mensaje.decode()
@@ -62,3 +62,10 @@ class Servidor():
 
     def muerto(self):
         self.sock.close()
+
+
+if __name__ == "__main__":
+    port=int(input("Introduce el puerto:\n"))
+    serv=Servidor(socket.gethostname(),port)
+    serv.conectaCliente()
+    serv.servidorVivo()
