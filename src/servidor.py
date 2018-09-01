@@ -30,13 +30,14 @@ class Servidor():
     def servidorVivo(self):
         self.sock.listen(100)
         while True:
+            print("Servidor Vivo")
             con,dir=self.sock.accept()
             self.clientes.append(con)
             print("Conectado a"+dir[0]+":"+str(dir[1]))
-            start_new_thread(self.threadCliente,(con,))
+            start_new_thread(self.threadCliente,(con,dir))
 
 
-    def threadCliente(self,con):
+    def threadCliente(self,con,dir):
         while True:
             try:
                 mensaje=con.recv(4096)
@@ -44,7 +45,7 @@ class Servidor():
                     self.con.send("Desconectando del Servidor")
                     break
                 if(mensaje):
-                    respuesta= ':'+ mensaje.decode()
+                    respuesta= str(dir[0])+":"+str(dir[1])+ ":"+mensaje.decode()
                     print(respuesta)
                     #considerar meter aqui la clase usuario y tomar su nombre...
                     self.transmite(respuesta.encode(),con)

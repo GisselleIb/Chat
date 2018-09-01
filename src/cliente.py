@@ -1,5 +1,6 @@
 import socket
 import sys
+import select
 class Cliente():
 
     def __init__(self,host,port):
@@ -31,18 +32,25 @@ class Cliente():
         except socket.timeout:
             return False
     def desconectado(self):
-        s="Salir"
-        sock.send(s.encode())
-        s=recv(4096).decode()
-        print(s)
-        return s
+        s=self.sock.recv(4096).decode()
+        if(s == "Desconectando del Servidor"):
+            print(s)
+            return True
+        else:
+            return False
     def enviado(self):
-        print("Bienvenido, escribe tu mensaje!:"+"\n")
         while True:
-            mensaje=input()
-            try:
-                self.sock.sendall(mensaje.encode())
-                respuesta=self.sock.recv(4096).decode()
-            except socket.error:
-                print("Falla al enviar el mensaje")
-                sys.exit()
+            lista=[sys.stdin, self.sock]
+            r,w,e = select.select(lista,[],[])
+
+            for socks in r:
+                if(socks == self.sock):
+                    mensaje = socks.recv(4096)
+                    print(mensaje.decode())
+                else:
+                    mensaje = sys.stdin.readline()
+                    self.sock.send(mensaje.encode())
+                    sys.stdout.write("<TU>")
+                    sys.stdout.write(mensaje)
+        self.sock.close()
+        sys.exit()
