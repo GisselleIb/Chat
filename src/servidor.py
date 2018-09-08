@@ -2,7 +2,7 @@ import socket
 import sys
 from _thread import *
 class Servidor():
-    clientes=[]
+    clientes={}
     def __init__(self,host,port):
         self.host=host
         self.port=port
@@ -32,7 +32,7 @@ class Servidor():
         while True:
             print("Servidor Vivo")
             con,dir=self.sock.accept()
-            self.clientes.append(con)
+            self.clientes[dir]=con
             print("Conectado a"+dir[0]+":"+str(dir[1]))
             start_new_thread(self.threadCliente,(con,dir))
 
@@ -54,7 +54,7 @@ class Servidor():
         con.close()
 
     def transmite(self,respuesta,conexion):
-            for cliente in self.clientes:
+            for dir,cliente in self.clientes.items():
                 if(cliente != conexion):
                     try:
                         cliente.sendall(respuesta)
