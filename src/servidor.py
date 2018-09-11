@@ -2,7 +2,7 @@ import socket
 import sys
 from _thread import *
 class Servidor():
-    clientes={}
+    salas={"global":[]}
     def __init__(self,host,port):
         self.host=host
         self.port=port
@@ -32,7 +32,7 @@ class Servidor():
         while True:
             print("Servidor Vivo")
             con,dir=self.sock.accept()
-            self.clientes[dir]=con
+            self.salas["global"].append(con)
             print("Conectado a"+dir[0]+":"+str(dir[1]))
             start_new_thread(self.threadCliente,(con,dir))
 
@@ -41,20 +41,40 @@ class Servidor():
         while True:
             try:
                 mensaje=con.recv(4096)
-                if(mensaje.decode() == "Salir"):
-                    self.con.send("Desconectando del Servidor")
-                    break
                 if(mensaje):
-                    respuesta= str(dir[0])+":"+str(dir[1])+ ":"+mensaje.decode()
-                    print(respuesta)
+                    msg=mensaje.decode()
+                    if(msg == "Salir"):
+                        self.con.send("Desconectando del Servidor")
+                        break
+                    elif("Sala: " in msg):
+                        self.salaChat(msg,con)
+                    elif("-p" in msg):
+                        transmitePrivado(msg,con)
+                    else:
+                        respuesta= str(dir[0])+":"+str(dir[1])+ ":"+msg
+                        print(respuesta)
                     #considerar meter aqui la clase usuario y tomar su nombre...
-                    self.transmite(respuesta.encode(),con)
+                        self.transmite(mensaje,con)
             except:
                 continue
         con.close()
 
+    def salaChat(self,sala,conexion):
+        if not sala in self.salas:
+            self.salas[sala]=[conexion]
+        else:
+            self.salas[sala].append(conexion)
+
+    def transmitePrivado(self,mensaje,con):
+        try:
+            mens=con.recv(4096)
+            self.clientes[mensaje].sendall(mens)
+        except e:
+            print("Error")
+
     def transmite(self,respuesta,conexion):
-            for dir,cliente in self.clientes.items():
+        for sala,clientes in self.salas.items():
+            for cliente in clientes:
                 if(cliente != conexion):
                     try:
                         cliente.sendall(respuesta)

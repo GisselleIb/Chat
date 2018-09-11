@@ -14,6 +14,7 @@ class Cliente():
         self.host=host
         self.port=port
         self.user=user
+        self.privado=False
         try:
             self.sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         except socket.error as e:
@@ -35,7 +36,8 @@ class Cliente():
     def seConecto(self):
         try:
             self.sock.connect((self.host,self.port))
-            print("cliente conectado")
+            print("Bienvenido, escribe -ayuda para ver "+
+            "todos los comandos disponibles")
             return True
         except socket.timeout:
             return False
@@ -59,20 +61,56 @@ class Cliente():
                     print(mensaje.decode())
                 else:
                     mensaje = sys.stdin.readline()
-                    #if(self.privado(mensaje)):
-                    #    dir=self.usuario.directorio[]
-                    self.sock.send(mensaje.encode())
-                    sys.stdout.write("<TU>")
-                    sys.stdout.write(mensaje)
+                    self.comandos(mensaje)
         self.sock.close()
         sys.exit()
 
-    def privado(self,mensaje):
-        if("-r" in mensaje):
-            return True
-        else:
-            return False
+    def ayuda(self):
+        print(" -r + Usuario : Envía un mensaje privado al usuario especificado"+
+        "\n -cierra : Cierra la sesión" +
+        "\n -agrega + usuario: Agrega el usuario especificado a"+
+        " la lista de contactos" +
+        "\n -elimina + usuario: Elimina al usuario especificado" +
+        "\n -sala + nombre de la sala: Ingresa a la sala de chat especificada" +
+         "o la crea si no existe")
 
-    def mensaje(self,mensaje):
-        mensaje=mensaje.replace("-r","")
+    def comandos(self,mensaje):
         men=mensaje.split()
+        if(men[0] == "-p"):
+            self.enviaPrivado(men)
+        elif(men[0] == "-ayuda"):
+            self.ayuda()
+        elif(men[0] == "-cierra"):
+            self.desconectado()
+        elif(men[0] == "-agrega"):
+            try:
+                self.user.agregaContacto(men[1])
+            except IndexError:
+                print("Escribe el nombre de usuario")
+        elif(men[0] == "-elimina"):
+            try:
+                self.user.eliminaContacto(men[1])
+            except IndexError:
+                print("Escribe el nombre del usuario que quieras eliminar")
+        elif(men[0] == "-sala"):
+            try:
+                self.salaChat(men[1])
+            except IndexError:
+                print("Escribe un nombre para la sala")
+        else:
+            self.enviaTodos(mensaje)
+
+    def enviaTodos(self,mensaje):
+        msg=self.user.nombre +":"+mensaje
+        self.sock.send(msg.encode())
+        sys.stdout.write("<TU>")
+        sys.stdout.write(mensaje)
+
+    def salaChat(self,sala):
+        msg="Sala: "+sala
+        self.sock.send(msg.encode())
+
+    def enviaPrivado(self,mensaje):
+        for string in mensaje:
+            if(string in self.user.directorio):
+                self.sock.send(self.user.directorio[string].encode())
