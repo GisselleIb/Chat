@@ -16,7 +16,6 @@ class Cliente():
         self.user=user
         try:
             self.sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            self.user.setDir(self.sock.getsockname())
         except socket.error as e:
             print("Error al crear socket")
             sys.exit()
@@ -36,7 +35,7 @@ class Cliente():
     def seConecto(self):
         try:
             self.sock.connect((self.host,self.port))
-            print("Bienvenido, escribe -ayuda para ver "+
+            print("Bienvenido, escribe -help para ver "+
             "todos los comandos disponibles")
             return True
         except socket.timeout:
@@ -48,7 +47,7 @@ class Cliente():
         self.sock.close()
 
     def enviado(self):
-        id="IDENTIFY"+self.user.nombre
+        id="IDENTIFY "+self.user.nombre
         self.sock.send(id.encode())
         while True:
             lista=[sys.stdin, self.sock]
@@ -74,7 +73,7 @@ class Cliente():
     def comandos(self,mensaje):
         men=mensaje.split()
         if(men[0] == "-r"):
-            self.enviaPrivado(men)
+            self.enviaPrivado(mensaje)
         elif(men[0] == "-help"):
             self.ayuda()
         elif(men[0] == "-d"):
@@ -90,28 +89,28 @@ class Cliente():
             self.enviaTodos(mensaje)
 
     def enviaTodos(self,mensaje):
-        msg="PUBLICMESSAGE"+self.user.nombre +":"+ mensaje
+        msg="PUBLICMESSAGE "+ mensaje
         self.sock.send(msg.encode())
         sys.stdout.write("<TU>")
         sys.stdout.write(mensaje)
 
     def salaChat(self,sala):
-        msg="CREATROOM"+sala
+        msg="CREATROOM "+sala
         self.sock.send(msg.encode())
 
     def unirse(self,sala):
-        msg="JOINROOM"+sala
+        msg="JOINROOM "+sala
         self.sock.send(msg.encode())
 
     def enviaSala(self,arr):
         msg="ROOMMESSAGE"
+        if(len(arr) < 3):
+            print("Inválido")
         for s in arr:
-            msg+=""+s
+            msg+=" "+s
         self.sock.send(msg.encode())
 
     def enviaPrivado(self,mensaje):
-        msg="MESSAGE"+self.user.nombre+":"
-        for s in mensaje:
-            msg+=" "+s
+        msg="MESSAGE "+ mensaje
         msg=msg.replace("-r","")
         self.sock.send(msg.encode())
