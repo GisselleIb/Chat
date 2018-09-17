@@ -1,19 +1,20 @@
 import socket
 import sys
 import select
+from usuario import Usuario
 class Cliente():
     """"Clase cliente que conectara con el servidor
     y se enviara los mensajes del usuario al servidor
     que le dara una respuesta
     """
 
-    def __init__(self,host,port,user):
+    def __init__(self,host,port):
         """Constructor de la clase, crea un socket TCP
         Parámetros
         host"""
         self.host=host
         self.port=port
-        self.user=user
+        self.user=Usuario("")
         try:
             self.sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         except socket.error as e:
@@ -35,8 +36,8 @@ class Cliente():
     def seConecto(self):
         try:
             self.sock.connect((self.host,self.port))
-            print("Bienvenido, escribe -help para ver "+
-            "todos los comandos disponibles")
+            print("Bienvenido,para poder enviar mensajes"+
+            "identificate con tu nombre de usuario con el comando -id nombredeusuario")
             return True
         except socket.timeout:
             return False
@@ -47,8 +48,6 @@ class Cliente():
         self.sock.close()
 
     def enviado(self):
-        id="IDENTIFY "+self.user.nombre
-        self.sock.send(id.encode())
         while True:
             lista=[sys.stdin, self.sock]
             r,w,e = select.select(lista,[],[])
@@ -72,7 +71,9 @@ class Cliente():
 
     def comandos(self,mensaje):
         men=mensaje.split()
-        if(men[0] == "-r"):
+        if(men[0] == "-id"):
+            self.identifica(men[1])
+        elif(men[0] == "-r"):
             self.enviaPrivado(mensaje)
         elif(men[0] == "-help"):
             self.ayuda()
@@ -88,6 +89,11 @@ class Cliente():
         else:
             self.enviaTodos(mensaje)
 
+    def identifica(self,nombre):
+        id="IDENTIFY "+nombre
+        self.user.nombre=nombre
+        self.sock.send(id.encode())
+
     def enviaTodos(self,mensaje):
         msg="PUBLICMESSAGE "+ mensaje
         self.sock.send(msg.encode())
@@ -95,7 +101,7 @@ class Cliente():
         sys.stdout.write(mensaje)
 
     def salaChat(self,sala):
-        msg="CREATROOM "+sala
+        msg="CREATEROOM "+sala
         self.sock.send(msg.encode())
 
     def unirse(self,sala):
