@@ -36,8 +36,8 @@ class Cliente():
     def seConecto(self):
         try:
             self.sock.connect((self.host,self.port))
-            print("Bienvenido,para poder enviar mensajes"+
-            "identificate con tu nombre de usuario con el comando -id nombredeusuario")
+            print("Bienvenido,para poder enviar mensajes "+
+            "identificate con tu nombre de usuario con el comando -id nombre")
             return True
         except socket.timeout:
             return False
@@ -67,6 +67,7 @@ class Cliente():
         "\n -d : Cierra la sesión" +
         "\n -s sala: Ingresa a la sala de chat especificada" +
          "o la crea si no existe" +
+         "\n -u : Enseña todos los usuarios conectados y sus estados"+
          "\n -p mensaje : Envía un mensaje a todos los usuarios conectados")
 
     def comandos(self,mensaje):
@@ -81,18 +82,43 @@ class Cliente():
             self.desconectado()
         elif(men[0] == "-y"):
             self.unirse(men[1])
+        elif (men[0] == "-i" ):
+            self.invita(men[1:])
         elif(men[0] == "-s"):
             try:
                 self.salaChat(men[1])
             except IndexError:
                 print("Escribe un nombre para la sala")
+        elif(men[0] == "-u"):
+            self.showUsuarios()
+        elif(men[0] == "-st"):
+            self.status()
+        elif(men[0] == "-rm"):
+            if(len(men) < 3):
+                print("Mensaje Inválido")
+            else:
+                self.enviaSala(men[1:])
         else:
             self.enviaTodos(mensaje)
+
+    def status(self):
+        msg="STATUS"
+        self.sock.send(msg.encode())
 
     def identifica(self,nombre):
         id="IDENTIFY "+nombre
         self.user.nombre=nombre
         self.sock.send(id.encode())
+
+    def invita(self,l):
+        msg="INVITE"
+        for usuario in l:
+            msg+=" "+usuario
+        self.sock.send(msg.encode())
+
+    def showUsuarios(self):
+        msg="USERS"
+        self.sock.send(msg.encode())
 
     def enviaTodos(self,mensaje):
         msg="PUBLICMESSAGE "+ mensaje
@@ -110,7 +136,7 @@ class Cliente():
 
     def enviaSala(self,arr):
         msg="ROOMMESSAGE"
-        if(len(arr) < 3):
+        if(len(arr) < 2):
             print("Inválido")
         for s in arr:
             msg+=" "+s
