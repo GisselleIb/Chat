@@ -6,7 +6,7 @@ class Usuario():
         self.nombre = nombre
         self.estado="ACTIVE"
 
-    def estado(self,estado):
+    def asignaEstado(self,estado):
         self.estado=estado
 
     def getNombre(self):

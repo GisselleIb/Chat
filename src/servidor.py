@@ -40,36 +40,35 @@ class Servidor():
 
 
     def threadCliente(self,con,dir):
+        id=False
         while True:
             try:
                 mensaje=con.recv(4096)
                 if(mensaje):
                     msg=mensaje.decode()
                     print(msg)
-                    self.manejaMensajes(msg,con,dir)
+                    id=self.manejaMensajes(msg,con,id)
                     print("Salida")
             except:
                 continue
         con.close()
 
-    def manejaMensajes(self,msg,con,dir):
+    def manejaMensajes(self,msg,con,id):
         print("entras")
         if("IDENTIFY" in msg):
+            print("id")
             msg=msg.replace("IDENTIFY ","")
-            us=Usuario(msg)
-            self.usuarios[us]=con
-            con.sendall("Identificación completada".encode())
-            print(len(self.usuarios))
-        elif(self.usuarios == {}):
+            id=self.identify(msg,con,id)
+        elif not id:
             con.sendall("Necesitas identificarte primero".encode())
         else:
             if "PUBLICMESSAGE" in msg:
                 print("public")
                 msg=msg.replace("PUBLICMESSAGE ","")
                 self.transmite(msg,con)
-            elif "ROOMMESSAGE" in msg:
+            elif "ROOMESSAGE" in msg:
                 print("hola1")
-                msg=msg.replace("ROOMMESSAGE ","")
+                msg=msg.replace("ROOMESSAGE ","")
                 arr=msg.split()
                 self.transmiteChat(arr,con)
             elif "MESSAGE" in msg :
@@ -82,14 +81,13 @@ class Servidor():
                     self.transmitePrivado(arr,con)
             elif "CREATEROOM" in msg:
                 print("sala")
-                print("else")
                 msg=msg.replace("CREATEROOM ","")
                 self.creaSala(msg,con)
             elif "INVITE" in msg:
                 msg=msg.replace("INVITE ","")
                 args=msg.split()
                 lst=args[1:]
-                self.invita(args[0],lst)
+                self.invita(args[0],lst,con)
             elif "JOINROOM" in msg:
                 print("join")
                 msg=msg.replace("JOINROOM ","")
@@ -102,6 +100,21 @@ class Servidor():
                 msg=msg.replace("STATUS","")
             elif("USERS" in msg):
                 self.showUsuarios(con)
+            else:
+                con.sendall("Mensaje inválido".encode())
+
+        return id
+
+    def identify(self,msg,con,id):
+        if not id:
+            for usuario in self.usuarios:
+                if usuario.nombre == msg:
+                    con.sendall("Nombre en uso,escoge otro".encode())
+                    return False
+            us=Usuario(msg)
+            self.usuarios[us]=con
+            con.sendall("Identificación completada".encode())
+            return True
 
     def showUsuarios(self,con):
         s=""
@@ -109,29 +122,36 @@ class Servidor():
             s+=usuario.nombre + " "+ usuario.estado+ "\n"
         con.sendall(s.encode())
 
-    def invita(self,nomsala,lista):
+    def invita(self,nomsala,lista,conexion):
+        print("invita")
         msg="Invitación a la sala: "+nomsala
-        for usuario in lista:
-            if(usuario in self.usuarios):
-                self.usuarios[usuario].sendall(msg.encode())
+        s=None
+        for sala in self.salas:
+            if sala.nombre == nomsala:
+                s=sala
+                if sala.dueño != conexion:
+                    conexion.sendall("No eres dueño de la sala, no puedes invitar".encode())
+                    return
+        for us in lista:
+            for usuario,cliente in self.usuarios.items():
+                if(usuario.nombre == us):
+                    cliente.sendall(msg.encode())
+                    s.agregaInv(cliente)
+                    break
+
 
     def unirse(self,s,con):
         print("uniendose")
         for sala in self.salas:
             if(sala.nombre == s):
-                print("if")
                 sala.agrega(con)
-                msg="Te has unido a: "+s
-                con.send(msg.encode())
 
     def creaSala(self,nomsala,conexion):
         print("Creando sala")
         sala=Sala(nomsala,conexion)
-        sala.agrega(conexion)
         self.salas.append(sala)
 
     def transmiteChat(self,arr,conexion):
-        print("SALA",arr[0])
         msg=""
         for usuario,cliente in self.usuarios.items():
             if(cliente == conexion):
@@ -143,6 +163,9 @@ class Servidor():
             i+=1
         for sala in self.salas:
             if(sala.nombre == arr[0]):
+                if not conexion in sala.clientes:
+                    conexion.sendall("No puedes enviar mensajes a esta sala".encode())
+                    return
                 for cliente in sala.clientes:
                     if(cliente != conexion):
                         try:
@@ -165,7 +188,6 @@ class Servidor():
         while i < len(arr):
             mensaje+=" "+arr[i]
             i+=1
-        print(us == None)
         try:
             us.sendall(mensaje.encode())
         except e:
@@ -178,7 +200,6 @@ class Servidor():
                 msg=usuario.nombre+": "
                 break
         msg+= respuesta
-        print(msg)
         for usuario,cliente in self.usuarios.items():
             if(cliente != conexion):
                 try:
@@ -192,6 +213,6 @@ class Servidor():
 
 if __name__ == "__main__":
     port=int(input("Introduce el puerto:\n"))
-    serv=Servidor('192.168.1.65',port)
+    serv=Servidor('192.168.1.70',port)
     serv.conectaCliente()
     serv.servidorVivo()

@@ -1,6 +1,7 @@
 import socket
 import sys
 import select
+sys.path.append('../..')
 from usuario import Usuario
 class Cliente():
     """"Clase cliente que conectara con el servidor
@@ -11,7 +12,9 @@ class Cliente():
     def __init__(self,host,port):
         """Constructor de la clase, crea un socket TCP
         Parámetros
-        host"""
+        host
+        port
+        """
         self.host=host
         self.port=port
         self.user=Usuario("")
@@ -45,6 +48,7 @@ class Cliente():
     def desconectado(self):
         d="DISCONNECT"
         self.sock.send(d.encode())
+        sys.exit()
         self.sock.close()
 
     def enviado(self):
@@ -65,8 +69,9 @@ class Cliente():
     def ayuda(self):
         print(" -r usuario mensaje: Envía un mensaje privado al usuario especificado"+
         "\n -d : Cierra la sesión" +
-        "\n -s sala: Ingresa a la sala de chat especificada" +
-         "o la crea si no existe" +
+        "\n -s sala: Crea una nueva sala de chat con el nombre especificado" +
+         "\n -y sala: Te unes a la sala de chat especificada, pero tienes"+
+         "\n que haber sido invitado primero"
          "\n -u : Enseña todos los usuarios conectados y sus estados"+
          "\n -p mensaje : Envía un mensaje a todos los usuarios conectados")
 
@@ -135,7 +140,7 @@ class Cliente():
         self.sock.send(msg.encode())
 
     def enviaSala(self,arr):
-        msg="ROOMMESSAGE"
+        msg="ROOMESSAGE"
         if(len(arr) < 2):
             print("Inválido")
         for s in arr:
