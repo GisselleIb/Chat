@@ -13,14 +13,7 @@ class UsuarioTest(unittest.TestCase):
         self.assertEqual(self.usuario.getNombre(),"nombre")
         self.usuario.setNombre("name")
 
-    def test_agregaContacto(self):
-        self.assertEqual(self.usuario.agregaContacto(None),
-        "Inserte un contacto válido")
-        self.usuario.agregaContacto("nombre")
-        self.assertTrue("nombre" in self.usuario.directorio)
-
-    def test_eliminaContacto(self):
-        self.usuario.agregaContacto("N")
-        self.assertTrue("N" in self.usuario.directorio)
-        self.usuario.eliminaContacto("N")
-        self.assertFalse("N" in self.usuario.directorio)
+    def test_estado(self):
+        self.assertEqual(self.usuario.estado,"ACTIVE")
+        self.usuario.asignaEstado("AWAY")
+        self.assertEqual(self.usuario.estado,"AWAY")
