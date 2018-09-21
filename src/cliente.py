@@ -1,7 +1,6 @@
 import socket
 import sys
 import select
-sys.path.append('../..')
 from usuario import Usuario
 class Cliente():
     """"Clase cliente que conectara con el servidor
@@ -14,13 +13,16 @@ class Cliente():
         Parámetros
         host
         port
+        user
+        vista
         """
         self.host=host
         self.port=port
         self.user=Usuario("")
+        self.escuchas=[]
         try:
             self.sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        except socket.error as e:
+        except OSError as e:
             print("Error al crear socket")
             sys.exit()
 
@@ -39,7 +41,7 @@ class Cliente():
     def seConecto(self):
         try:
             self.sock.connect((self.host,self.port))
-            print("Bienvenido,para poder enviar mensajes "+
+            self.actualiza("Bienvenido,para poder enviar mensajes "+
             "identificate con tu nombre de usuario con el comando -id nombre")
             return True
         except socket.timeout:
@@ -58,24 +60,25 @@ class Cliente():
 
             for socks in r:
                 if(socks == self.sock):
-                    mensaje = socks.recv(4096)
-                    print(mensaje.decode())
-                else:
-                    mensaje = sys.stdin.readline()
-                    self.comandos(mensaje)
+                    mensaje = socks.recv(1096)
+                    self.actualiza(mensaje.decode())
+
         self.sock.close()
         sys.exit()
 
     def ayuda(self):
-        print(" -r usuario mensaje: Envía un mensaje privado al usuario especificado"+
-        "\n -d : Cierra la sesión" +
-        "\n -s sala: Crea una nueva sala de chat con el nombre especificado" +
-         "\n -y sala: Te unes a la sala de chat especificada, pero tienes"+
-         "\n que haber sido invitado primero"
-         "\n -u : Enseña todos los usuarios conectados y sus estados"+
-         "\n -p mensaje : Envía un mensaje a todos los usuarios conectados")
+        s=" -r usuario mensaje: Envía un mensaje privado al usuario especificado"+ \
+        "\n -d : Cierra la sesión" +\
+        "\n -s sala: Crea una nueva sala de chat con el nombre especificado" +\
+         "\n -y sala: Te unes a la sala de chat especificada, pero tienes"+\
+         "\n que haber sido invitado primero"+\
+         "\n -u : Enseña todos los usuarios conectados y sus estados"+\
+         "\n -p mensaje : Envía un mensaje a todos los usuarios conectados"
+        self.vista.recibido(s)
 
     def comandos(self,mensaje):
+        if not mensaje:
+            return
         men=mensaje.split()
         if(men[0] == "-id"):
             self.identifica(men[1])
@@ -86,26 +89,35 @@ class Cliente():
         elif(men[0] == "-d"):
             self.desconectado()
         elif(men[0] == "-y"):
-            self.unirse(men[1])
+            try:
+                self.unirse(men[1])
+            except IndexError:
+                self.actualiza("Escribe un nombre para la sala")
         elif (men[0] == "-i" ):
-            self.invita(men[1:])
+            try:
+                self.invita(men[1:])
+            except IndexError:
+                self.actualiza("Escribe un nombre para la sala")
         elif(men[0] == "-s"):
             try:
                 self.salaChat(men[1])
             except IndexError:
-                print("Escribe un nombre para la sala")
+                self.actualiza("Escribe un nombre para la sala")
         elif(men[0] == "-u"):
             self.showUsuarios()
         elif(men[0] == "-st"):
             self.status()
         elif(men[0] == "-rm"):
             if(len(men) < 3):
-                print("Mensaje Inválido")
+                self.actualiza("Mensaje Inválido")
             else:
                 self.enviaSala(men[1:])
         else:
             self.enviaTodos(mensaje)
 
+    def actualiza(self,evento):
+        for escucha in self.escuchas:
+            escucha(evento)
     def status(self):
         msg="STATUS"
         self.sock.send(msg.encode())
@@ -128,8 +140,7 @@ class Cliente():
     def enviaTodos(self,mensaje):
         msg="PUBLICMESSAGE "+ mensaje
         self.sock.send(msg.encode())
-        sys.stdout.write("<TU>")
-        sys.stdout.write(mensaje)
+
 
     def salaChat(self,sala):
         msg="CREATEROOM "+sala
@@ -141,8 +152,6 @@ class Cliente():
 
     def enviaSala(self,arr):
         msg="ROOMESSAGE"
-        if(len(arr) < 2):
-            print("Inválido")
         for s in arr:
             msg+=" "+s
         self.sock.send(msg.encode())
@@ -151,3 +160,8 @@ class Cliente():
         msg="MESSAGE "+ mensaje
         msg=msg.replace("-r","")
         self.sock.send(msg.encode())
+if __name__ == "__main__":
+        port=int(input("Introduce el puerto:\n"))
+        serv=Cliente('187.207.46.196',port,"")
+        serv.seConecto()
+        serv.enviado()
