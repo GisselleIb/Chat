@@ -5,25 +5,28 @@ from sala import Sala
 from _thread import *
 class Servidor():
     salas=[]
-    usuarios={} #diccionario de objetos usuario para saber su estado
+    usuarios={}
+    """Clase Servidor encargada de procesar los mensajes
+    enviados por el cliente.
+    """
     def __init__(self,host,port):
+        """Constructor de la clase, crea un socket TCP
+        Parámetros
+        ----------
+        host : str
+           La dirección IP del servidor.
+        port : int
+           El puerto del servidor.
+        sock : socket
+           Socket con el que se hará la conexión
+        """
         self.host=host
         self.port=port
         self.sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
-    def setHost(self,host):
-        self.host=host
-
-    def setPort(self,port):
-        self.port=port
-
-    def getHost(self):
-        return self.host
-
-    def getPort(self):
-        return self.port
-
     def conectaCliente(self):
+        """Hace el bind con la ip y puerto.
+        """
         try:
             self.sock.bind((self.host,self.port))
             self.servidorVivo()
@@ -32,6 +35,9 @@ class Servidor():
             return False
 
     def servidorVivo(self):
+        """Pone al servidor en marcha y comienza a esperar
+        por conexiones, para luego meterlas en un hilo
+        """
         self.sock.listen(100)
         while True:
             print("Servidor Vivo")
@@ -41,6 +47,15 @@ class Servidor():
 
 
     def threadCliente(self,con,dir):
+        """El hilo que maneja el cliente,recibe mensajes
+        del cliente
+        Parámetros
+        ----------
+        con : socket
+           Conexión con el cliente.
+        dir : (str,int)
+           Dirección del cliente.
+        """
         id=False
         while True:
             try:
@@ -55,6 +70,16 @@ class Servidor():
         con.close()
 
     def manejaMensajes(self,msg,con,id):
+        """Procesa los mensajes recibidos del cliente
+        Parámetros
+        ----------
+        msg : str
+           Mensaje a procesar.
+        con : socket
+           Conexión con el cliente.
+        id : Bool
+           Bandera para comprobar si el usuario se identifico
+        """
         if("IDENTIFY" in msg):
             msg=msg.replace("IDENTIFY ","")
             id=self.identify(msg,con,id)
@@ -87,7 +112,9 @@ class Servidor():
                 msg=msg.replace("JOINROOM ","")
                 self.unirse(msg,con)
             elif "DISCONNECT" in msg:
-                msg=msg.replace("DISCONNECT","")
+                for usuario,cliente in self.usuarios:
+                    if(cliente == con):
+                        del self.usuarios[usuario]
                 for sala in self.salas:
                     sala.elimina(con)
             elif("STATUS" in msg):
@@ -100,6 +127,16 @@ class Servidor():
         return id
 
     def identify(self,msg,con,id):
+        """Identifica al usuario y lo guarda en el diccionario
+        Parámetros
+        ----------
+        msg : str
+            nombre del usuario.
+        con : socket
+            Conexión con el cliente.
+        id : Bool
+           Bandera para marcar que el usuario se identificó.
+        """
         if not id:
             for usuario in self.usuarios:
                 if usuario.nombre == msg:
@@ -111,12 +148,28 @@ class Servidor():
             return True
 
     def showUsuarios(self,con):
+        """Enseña los usuarios conectados y su status.
+        Parámetros
+        ----------
+        con : socket
+            Conexión con el cliente.
+        """
         s=""
         for usuario in self.usuarios:
             s+=usuario.nombre + " "+ usuario.estado+ "\n"
         con.sendall(s.encode())
 
     def invita(self,nomsala,lista,conexion):
+        """Invita a la sala a la lista de usuario.
+        Parámetros
+        ----------
+        nomsala : str
+           Nombre de la sala
+        lista : [str]
+            Lista de usuarios a invitar
+        conexión : socket
+                Conexión con el cliente.
+        """
         msg="Invitación a la sala: "+nomsala
         s=None
         for sala in self.salas:
@@ -134,15 +187,38 @@ class Servidor():
 
 
     def unirse(self,s,con):
+        """Une al usuario a la sala indicada.
+        Parámetros
+        ----------
+        s : str
+            Nombre de la sala
+         con : socket
+            Conexión con el cliente.
+        """
         for sala in self.salas:
             if(sala.nombre == s):
                 sala.agrega(con)
 
     def creaSala(self,nomsala,conexion):
+        """Crea una sala nueva
+        Parámetros
+        ----------
+        nomsala : str
+            Nombre de la sala
+        conexion : socket
+           Conexión con el cliente.
+        """
         sala=Sala(nomsala,conexion)
         self.salas.append(sala)
 
     def transmiteChat(self,arr,conexion):
+        """Transmite un mensaje a la sala de chat indicada
+        Parámetros
+        ----------
+        arr : [str]
+        conexion : socket
+           Conexión con el cliente
+        """
         msg=arr[0]
         for usuario,cliente in self.usuarios.items():
             if(cliente == conexion):
@@ -167,6 +243,15 @@ class Servidor():
 
 
     def transmitePrivado(self,arr,con):
+        """Transmite un mensaje privado a un usuario
+        Parámetros
+        ----------
+        arr :[str]
+            Lista que contiene el usuario al que va dirigido
+            y el mensaje
+        con : socket
+           Conexión con el cliente
+        """
         mensaje="privado"
         us=None
         for usuario,cliente in self.usuarios.items():
@@ -185,6 +270,14 @@ class Servidor():
             print("error")
 
     def transmite(self,respuesta,conexion):
+        """Transmite un mensaje global
+        Parámetros
+        ----------
+        respuesta : str
+            Mensaje que se va a transmitir
+        conexion : socket
+           Conexión con el cliente.
+        """
         msg=''
         for usuario,cliente in self.usuarios.items():
             if(cliente == conexion):
