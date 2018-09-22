@@ -1,6 +1,4 @@
-from servidor import Servidor
 from controlador import Controlador
-from usuario import Usuario
 from cliente import Cliente
 from guiChat import GUIChat
 from PyQt5 import QtWidgets
@@ -8,7 +6,12 @@ import threading
 import time
 import sys
 class Chat(QtWidgets.QApplication):
+    """Clase Chat que funciona como el main del proyecto
+    """
     def __init__(self,sys_argv,port):
+        """Constructor de la clase, crea todo lo necesario
+        para empezar el proyecto
+        """
         super(Chat,self).__init__(sys_argv)
         self.cliente=Cliente('0.0.0.0',port)
         self.controlador=Controlador(self.cliente)
