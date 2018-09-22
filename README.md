@@ -1,5 +1,5 @@
-###Chat
-##Chat Modelado y Programación
+# Chat
+#  Chat Modelado y Programación
 **Para clonar el repositorio:**
 https://github.com/GisselleIb/Chat.git
 
