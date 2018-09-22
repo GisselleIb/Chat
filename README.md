@@ -1,7 +1,7 @@
 # Chat
 #  Chat Modelado y Programación
 **Para clonar el repositorio:**
-https://github.com/GisselleIb/Chat.git
+git clone https://github.com/GisselleIb/Chat.git
 
 **Pruebas unitarias:**
  Para correrlas se debe escribir en la terminal python3 setup.py test
