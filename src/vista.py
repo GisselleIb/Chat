@@ -2,14 +2,15 @@
 
 # Form implementation generated from reading ui file 'vista.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.1
+# Created by: PyQt5 UI code generator 5.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-#from cliente import Cliente
-class Vista(object):
 
+class Vista(object):
+    """Clase con todos los elementos de la interfaz gráfica
+    """
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -59,6 +60,7 @@ class Vista(object):
         self.menubar.addAction(self.menuSalas.menuAction())
 
         self.retranslateUi(MainWindow)
+        self.entrada.returnPressed.connect(self.enviar.click)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -73,23 +75,12 @@ class Vista(object):
         self.creaSalas.setText(_translate("MainWindow", "Crea sala"))
         self.actionUnirse_a_sala.setText(_translate("MainWindow", "Unirse a sala"))
 
-    def enviaMensaje(self):
-        self.enviar.clicked.connect(comando= lambda: self.pantalla.setText(self.entrada.text()))
-        return self.pantalla.toPlainText()
 
-    def creaSala(self,evento):
-        pass
-    def status(self,evento):
-        pass
-    def unirseSala(self,evento):
-        pass
-    def click(self):
-        pass
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    ui =Vista()
+    ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
