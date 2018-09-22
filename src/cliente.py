@@ -19,6 +19,8 @@ class Cliente():
            Clase que guardara los datos del usuario.
         escuchas : [func]
            Lista de escuchas
+        sock : socket
+            Socket con el que se hará la conexión.
         """
         self.host=host
         self.port=port
@@ -118,7 +120,7 @@ class Cliente():
         elif(men[0] == "-u"):
             self.showUsuarios()
         elif(men[0] == "-st"):
-            self.status()
+            self.status(mensaje)
         elif(men[0] == "-rm"):
             if(len(men) < 3):
                 self.actualiza("Mensaje Inválido")
@@ -138,11 +140,12 @@ class Cliente():
         for escucha in self.escuchas:
             escucha(evento)
 
-    def status(self):
+    def status(self,status):
         """Manda al servidor un mensaje para cambiar
         el status del usuario.
         """
-        msg="STATUS"
+        status=status.replace("-st","")
+        msg="STATUS"+status
         self.sock.send(msg.encode())
 
     def identifica(self,nombre):
@@ -236,9 +239,3 @@ class Cliente():
         msg="MESSAGE "+ mensaje
         msg=msg.replace("-r","")
         self.sock.send(msg.encode())
-        
-if __name__ == "__main__":
-        port=int(input("Introduce el puerto:\n"))
-        serv=Cliente('187.207.46.196',port,"")
-        serv.seConecto()
-        serv.enviado()

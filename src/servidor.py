@@ -115,10 +115,16 @@ class Servidor():
                 for usuario,cliente in self.usuarios:
                     if(cliente == con):
                         del self.usuarios[usuario]
+                        con.close()
                 for sala in self.salas:
                     sala.elimina(con)
             elif("STATUS" in msg):
-                msg=msg.replace("STATUS","")
+                msg=msg.replace("STATUS ","")
+                print(msg)
+                if(msg == "ACTIVE" or msg == "BUSY" or msg == "AWAY"):
+                    for usuario in self.usuarios:
+                        if self.usuarios[usuario] == con :
+                            usuario.asignaEstado(msg)
             elif("USERS" in msg):
                 self.showUsuarios(con)
             else:
